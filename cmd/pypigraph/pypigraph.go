@@ -25,6 +25,7 @@ type Requirement struct {
 var allPkgRegexp = regexp.MustCompile(`<a href='([A-Za-z0-9\._-]+)'>([A-Za-z0-9\._-]+)</a><br/>`)
 var pkgFilesRegexp = regexp.MustCompile(`<a href="([/A-Za-z0-9\._-]+)#md5=[0-9a-z]+"[^>]*>([A-Za-z0-9\._-]+)</a><br/>`)
 var tarRegexp = regexp.MustCompile(`[/A-Za-z0-9\._-]+\.tar\.gz`)
+var zipRegexp = regexp.MustCompile(`[/A-Za-z0-9\._-]+\.zip`)
 var requirementRegexp = regexp.MustCompile(`([A-Za-z0-9\._-]+)(?:\[([A-Za-z0-9\._-]+)\])?\s*(?:(==|>=|>)\s*([0-9\.]+))?`)
 
 func (p *PackageIndex) AllPackages() ([]string, error) {
@@ -61,14 +62,15 @@ func (p *PackageIndex) PackageRequirements(pkg string) ([]*Requirement, error) {
 		return nil, nil
 	}
 
-	path := lastTar(files)
-	if path == "" {
-		os.Stderr.WriteString(fmt.Sprintf("[tarball] no tar found in %+v for pkg %s\n", files, pkg))
+	if path := lastTar(files); path != "" {
+		return p.fetchRequiresTar(path)
+	} else if path := lastZip(files); path != "" {
+		return p.fetchRequiresZip(path)
+	} else {
+		// TODO: handle egg files
+		os.Stderr.WriteString(fmt.Sprintf("[tar/zip] no tar or zip found in %+v for pkg %s\n", files, pkg))
 		return nil, nil
 	}
-
-	reqs, err := p.fetchRequires(path)
-	return reqs, err
 }
 
 func (p *PackageIndex) pkgFiles(pkg string) ([]string, error) {
@@ -96,7 +98,60 @@ func (p *PackageIndex) pkgFiles(pkg string) ([]string, error) {
 	return files, nil
 }
 
-func (p *PackageIndex) fetchRequires(path string) ([]*Requirement, error) {
+func (p *PackageIndex) fetchRequiresZip(path string) ([]*Requirement, error) {
+	f, err := ioutil.TempFile("", "pypigraph-zip")
+	if err != nil {
+		return nil, err
+	}
+	defer os.Remove(f.Name())
+	if err := f.Close(); err != nil {
+		return nil, err
+	}
+
+	uri := fmt.Sprintf("%s%s", p.URI, path)
+	wget := exec.Command("wget", uri, "-O", f.Name())
+	unzip := exec.Command("unzip", "-cq", f.Name(), "**/*.egg-info/requires.txt")
+
+	err = wget.Run()
+	if err != nil {
+		return nil, fmt.Errorf("Error running wget: %s", err)
+	}
+
+	unzipOut, err := unzip.StdoutPipe()
+	if err != nil {
+		return nil, err
+	}
+	unzipErr, err := unzip.StderrPipe()
+	if err != nil {
+		return nil, err
+	}
+
+	err = unzip.Start()
+	if err != nil {
+		return nil, err
+	}
+	var unzipErrput, unzipOutput []byte
+	go func() {
+		unzipErrput, _ = ioutil.ReadAll(unzipErr)
+	}()
+	go func() {
+		unzipOutput, _ = ioutil.ReadAll(unzipOut)
+	}()
+	err = unzip.Wait()
+	if err != nil {
+		if strings.Contains(string(unzipErrput), "filename not matched:") {
+			os.Stderr.WriteString(fmt.Sprintf("[requires.txt] no requires.txt found in %s\n", uri))
+			return nil, nil
+		} else {
+			return nil, fmt.Errorf("Error running unzip on file %s: %s, [%s]", f.Name(), err, string(unzipErrput))
+		}
+	}
+
+	rawReqs := strings.TrimSpace(string(unzipOutput))
+	return parseRequirements(rawReqs)
+}
+
+func (p *PackageIndex) fetchRequiresTar(path string) ([]*Requirement, error) {
 	uri := fmt.Sprintf("%s%s", p.URI, path)
 	curl := exec.Command("curl", uri)
 	tar := exec.Command("tar", "-xvO", "--include", "**/*.egg-info/requires.txt")
@@ -136,6 +191,30 @@ func (p *PackageIndex) fetchRequires(path string) ([]*Requirement, error) {
 		return nil, nil
 	}
 
+	return parseRequirements(rawReqs)
+}
+
+func lastTar(files []string) string {
+	for f := len(files) - 1; f >= 0; f-- {
+		if tarRegexp.MatchString(files[f]) {
+			return files[f]
+		}
+	}
+	return ""
+}
+
+func lastZip(files []string) string {
+	for f := len(files) - 1; f >= 0; f-- {
+		if zipRegexp.MatchString(files[f]) {
+			return files[f]
+		}
+	}
+	return ""
+}
+
+func parseRequirements(rawReqs string) ([]*Requirement, error) {
+	rawReqs = strings.TrimSpace(rawReqs)
+
 	reqStrs := strings.Split(rawReqs, "\n")
 	reqs := make([]*Requirement, 0)
 	for _, reqStr := range reqStrs {
@@ -146,15 +225,6 @@ func (p *PackageIndex) fetchRequires(path string) ([]*Requirement, error) {
 		reqs = append(reqs, req)
 	}
 	return reqs, nil
-}
-
-func lastTar(files []string) string {
-	for f := len(files) - 1; f >= 0; f-- {
-		if tarRegexp.MatchString(files[f]) {
-			return files[f]
-		}
-	}
-	return ""
 }
 
 func parseRequirement(reqStr string) (*Requirement, error) {
