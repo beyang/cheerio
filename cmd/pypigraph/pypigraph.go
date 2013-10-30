@@ -24,7 +24,7 @@ type Requirement struct {
 
 var allPkgRegexp = regexp.MustCompile(`<a href='([A-Za-z0-9\._-]+)'>([A-Za-z0-9\._-]+)</a><br/>`)
 var pkgFilesRegexp = regexp.MustCompile(`<a href="([/A-Za-z0-9\._-]+)#md5=[0-9a-z]+"[^>]*>([A-Za-z0-9\._-]+)</a><br/>`)
-var tarRegexp = regexp.MustCompile(`[/A-Za-z0-9\._-]+\.tar\.gz`)
+var tarRegexp = regexp.MustCompile(`[/A-Za-z0-9\._-]+\.tar\.(?:gz|bz2)`)
 var zipRegexp = regexp.MustCompile(`[/A-Za-z0-9\._-]+\.zip`)
 var requirementRegexp = regexp.MustCompile(`([A-Za-z0-9\._-]+)(?:\[([A-Za-z0-9\._-]+)\])?\s*(?:(==|>=|>)\s*([0-9\.]+))?`)
 
@@ -66,8 +66,7 @@ func (p *PackageIndex) PackageRequirements(pkg string) ([]*Requirement, error) {
 		return p.fetchRequiresTar(path)
 	} else if path := lastZip(files); path != "" {
 		return p.fetchRequiresZip(path)
-	} else {
-		// TODO: handle egg files
+	} else { // TODO: handle egg files
 		os.Stderr.WriteString(fmt.Sprintf("[tar/zip] no tar or zip found in %+v for pkg %s\n", files, pkg))
 		return nil, nil
 	}
