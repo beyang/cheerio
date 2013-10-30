@@ -58,7 +58,7 @@ func (p *PackageIndex) PackageRequirements(pkg string) ([]*Requirement, error) {
 	if err != nil {
 		return nil, err
 	} else if len(files) == 0 {
-		os.Stderr.WriteString(fmt.Sprintf("[no-files] no files found for pkg %s\n", pkg))
+		// os.Stderr.WriteString(fmt.Sprintf("[no-files] no files found for pkg %s\n", pkg))
 		return nil, nil
 	}
 
@@ -139,7 +139,7 @@ func (p *PackageIndex) fetchRequiresZip(path string) ([]*Requirement, error) {
 	err = unzip.Wait()
 	if err != nil {
 		if strings.Contains(string(unzipErrput), "filename not matched:") {
-			os.Stderr.WriteString(fmt.Sprintf("[requires.txt] no requires.txt found in %s\n", uri))
+			// os.Stderr.WriteString(fmt.Sprintf("[requires.txt] no requires.txt found in %s\n", uri))
 			return nil, nil
 		} else {
 			return nil, fmt.Errorf("Error running unzip on file %s: %s, [%s]", f.Name(), err, string(unzipErrput))
@@ -186,7 +186,7 @@ func (p *PackageIndex) fetchRequiresTar(path string) ([]*Requirement, error) {
 
 	rawReqs := strings.TrimSpace(string(tarOutput))
 	if rawReqs == "" {
-		os.Stderr.WriteString(fmt.Sprintf("[requires.txt] no requires.txt found in %s\n", uri))
+		// os.Stderr.WriteString(fmt.Sprintf("[requires.txt] no requires.txt found in %s\n", uri))
 		return nil, nil
 	}
 
