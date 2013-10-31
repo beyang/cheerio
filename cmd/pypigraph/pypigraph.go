@@ -17,16 +17,16 @@ type PackageIndex struct {
 }
 
 type Requirement struct {
-	Name       string
-	Constraint string
-	Version    string
+	Name string
 }
 
-var allPkgRegexp = regexp.MustCompile(`<a href='([A-Za-z0-9\._-]+)'>([A-Za-z0-9\._-]+)</a><br/>`)
-var pkgFilesRegexp = regexp.MustCompile(`<a href="([/A-Za-z0-9\._-]+)#md5=[0-9a-z]+"[^>]*>([A-Za-z0-9\._-]+)</a><br/>`)
-var tarRegexp = regexp.MustCompile(`[/A-Za-z0-9\._-]+\.tar\.(?:gz|bz2)`)
-var zipRegexp = regexp.MustCompile(`[/A-Za-z0-9\._-]+\.zip`)
-var requirementRegexp = regexp.MustCompile(`([A-Za-z0-9\._-]+)(?:\[([A-Za-z0-9\._-]+)\])?\s*(?:(==|>=|>)\s*([0-9\.]+))?`)
+var allPkgRegexp = regexp.MustCompile(`<a href='([A-Za-z0-9\._\-]+)'>([A-Za-z0-9\._\-]+)</a><br/>`)
+var pkgFilesRegexp = regexp.MustCompile(`<a href="([/A-Za-z0-9\._\-]+)#md5=[0-9a-z]+"[^>]*>([A-Za-z0-9\._\-]+)</a><br/>`)
+var tarRegexp = regexp.MustCompile(`[/A-Za-z0-9\._\-]+\.tar\.(?:gz|bz2)`)
+var zipRegexp = regexp.MustCompile(`[/A-Za-z0-9\._\-]+\.zip`)
+var eggRegexp = regexp.MustCompile(`[/A-Za-z0-9\._\-]+\.egg`)
+var requirementRegexp = regexp.MustCompile(`(?P<package>[A-Za-z0-9\._\-]+)(?:\[([A-Za-z0-9\._\-]+)\])?\s*(?:(?P<constraint>==|>=|>|<|<=)\s*(?P<version>[A-Za-z0-9\._\-]+)(?:\s*,\s*[<>=!]+\s*[a-z0-9\.]+)?)?`)
+var reqHeaderRegexp = regexp.MustCompile(`\[[A-Za-z0-9\._\-]+\]`)
 
 func (p *PackageIndex) AllPackages() ([]string, error) {
 	pkgs := make([]string, 0)
@@ -64,9 +64,11 @@ func (p *PackageIndex) PackageRequirements(pkg string) ([]*Requirement, error) {
 
 	if path := lastTar(files); path != "" {
 		return p.fetchRequiresTar(path)
+	} else if path := lastEgg(files); path != "" {
+		return p.fetchRequiresZip(path, true)
 	} else if path := lastZip(files); path != "" {
-		return p.fetchRequiresZip(path)
-	} else { // TODO: handle egg files
+		return p.fetchRequiresZip(path, false)
+	} else {
 		os.Stderr.WriteString(fmt.Sprintf("[tar/zip] no tar or zip found in %+v for pkg %s\n", files, pkg))
 		return nil, nil
 	}
@@ -97,8 +99,8 @@ func (p *PackageIndex) pkgFiles(pkg string) ([]string, error) {
 	return files, nil
 }
 
-func (p *PackageIndex) fetchRequiresZip(path string) ([]*Requirement, error) {
-	f, err := ioutil.TempFile("", "pypigraph-zip")
+func (p *PackageIndex) fetchRequiresZip(path string, isEgg bool) ([]*Requirement, error) {
+	f, err := ioutil.TempFile("", "pypigraph_zip")
 	if err != nil {
 		return nil, err
 	}
@@ -109,7 +111,13 @@ func (p *PackageIndex) fetchRequiresZip(path string) ([]*Requirement, error) {
 
 	uri := fmt.Sprintf("%s%s", p.URI, path)
 	wget := exec.Command("wget", uri, "-O", f.Name())
-	unzip := exec.Command("unzip", "-cq", f.Name(), "**/*.egg-info/requires.txt")
+	var eggInfoFilePattern string
+	if isEgg {
+		eggInfoFilePattern = "EGG-INFO/requires.txt"
+	} else {
+		eggInfoFilePattern = "**/*.egg-info/requires.txt"
+	}
+	unzip := exec.Command("unzip", "-cq", f.Name(), eggInfoFilePattern)
 
 	err = wget.Run()
 	if err != nil {
@@ -202,6 +210,15 @@ func lastTar(files []string) string {
 	return ""
 }
 
+func lastEgg(files []string) string {
+	for f := len(files) - 1; f >= 0; f-- {
+		if eggRegexp.MatchString(files[f]) {
+			return files[f]
+		}
+	}
+	return ""
+}
+
 func lastZip(files []string) string {
 	for f := len(files) - 1; f >= 0; f-- {
 		if zipRegexp.MatchString(files[f]) {
@@ -217,11 +234,17 @@ func parseRequirements(rawReqs string) ([]*Requirement, error) {
 	reqStrs := strings.Split(rawReqs, "\n")
 	reqs := make([]*Requirement, 0)
 	for _, reqStr := range reqStrs {
-		req, err := parseRequirement(reqStr)
-		if err != nil {
-			return nil, fmt.Errorf("Error parsing requirement: %s", err)
+		if reqStr == "" {
+			continue
 		}
-		reqs = append(reqs, req)
+
+		if req, err := parseRequirement(reqStr); err == nil {
+			reqs = append(reqs, req)
+		} else if reqHeaderRegexp.MatchString(reqStr) {
+			// do nothing
+		} else {
+			os.Stderr.WriteString(fmt.Sprintf("[req] Could not parse requirement: %s\n", err))
+		}
 	}
 	return reqs, nil
 }
@@ -235,11 +258,7 @@ func parseRequirement(reqStr string) (*Requirement, error) {
 		return nil, fmt.Errorf("Unable to parse requirement from string: '%s'", reqStr)
 	}
 
-	return &Requirement{
-		Name:       match[1],
-		Constraint: match[3],
-		Version:    match[4],
-	}, nil
+	return &Requirement{Name: match[1]}, nil
 }
 
 func main() {
