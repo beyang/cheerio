@@ -237,8 +237,11 @@ func parseRequirement(reqStr string) (*Requirement, error) {
 	} else if match[0] != reqStr {
 		return nil, fmt.Errorf("Unable to parse requirement from string: '%s'", reqStr)
 	}
-
 	return &Requirement{Name: match[1]}, nil
+}
+
+func normalizedPkgName(pkg string) string {
+	return strings.ToLower(pkg)
 }
 
 func main() {
@@ -255,7 +258,7 @@ func main() {
 			os.Stderr.WriteString(fmt.Sprintf("[ERROR] unable to parse pkg %s due to error: %s\n", pkg, err))
 		} else {
 			for _, req := range reqs {
-				fmt.Printf("%s:%s\n", pkg, req.Name)
+				fmt.Printf("%s:%s\n", normalizedPkgName(pkg), normalizedPkgName(req.Name))
 			}
 		}
 	}
