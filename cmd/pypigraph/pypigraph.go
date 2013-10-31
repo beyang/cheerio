@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"io"
 	"io/ioutil"
+	"log"
 	"net/http"
 	"os"
 	"os/exec"
@@ -245,15 +246,19 @@ func normalizedPkgName(pkg string) string {
 }
 
 func main() {
-	p := &PackageIndex{URI: "https://pypi.python.org"}
-	pkgs, err := p.AllPackages()
+	pkgIndex := &PackageIndex{URI: "https://pypi.python.org"}
+	pkgs, err := pkgIndex.AllPackages()
 	if err != nil {
 		os.Stderr.WriteString(fmt.Sprintf("[FATAL] %s\n", err))
 		os.Exit(1)
 	}
 
-	for _, pkg := range pkgs {
-		reqs, err := p.PackageRequirements(pkg)
+	for p, pkg := range pkgs {
+		if p%50 == 0 { // progress
+			log.Printf("[status] %d / %d\n", p, len(pkgs))
+		}
+
+		reqs, err := pkgIndex.PackageRequirements(pkg)
 		if err != nil {
 			os.Stderr.WriteString(fmt.Sprintf("[ERROR] unable to parse pkg %s due to error: %s\n", pkg, err))
 		} else {
