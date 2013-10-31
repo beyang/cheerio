@@ -6,18 +6,24 @@ import (
 	"fmt"
 	ppg "github.com/beyang/pypigraph"
 	"os"
+	"path/filepath"
 	"strings"
 )
 
+var file = flag.String("graphfile", "", "Path to graph file.  Defaults to $GOPATH/src/github.com/beyang/pypigraph/data/pypi_graph")
+
 func main() {
 	flag.Parse()
-	file := flag.Arg(0)
-	pkg := ppg.NormalizedPkgName(flag.Arg(1))
+	pkg := ppg.NormalizedPkgName(flag.Arg(0))
+
+	if *file == "" {
+		*file = filepath.Join(os.Getenv("GOPATH"), "src/github.com/beyang/pypigraph/data/pypi_graph")
+	}
 
 	requires := make(map[string][]string)
 	requiredBy := make(map[string][]string)
 
-	f, _ := os.Open(file)
+	f, _ := os.Open(*file)
 	reader := bufio.NewReader(f)
 	for {
 		lineB, _, err := reader.ReadLine()
@@ -51,5 +57,7 @@ func main() {
 		}
 	}
 
-	fmt.Printf("pkg %s uses:\n  %s\nand is used by:\n  %s\n", pkg, strings.Join(requires[pkg], " "), strings.Join(requiredBy[pkg], " "))
+	uses := requires[pkg]
+	usedBy := requiredBy[pkg]
+	fmt.Printf("pkg %s uses (%d):\n  %s\nand is used by (%d):\n  %s\n", pkg, len(uses), strings.Join(uses, " "), len(usedBy), strings.Join(usedBy, " "))
 }
