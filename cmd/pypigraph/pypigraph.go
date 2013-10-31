@@ -124,33 +124,13 @@ func (p *PackageIndex) fetchRequiresZip(path string, isEgg bool) ([]*Requirement
 		return nil, fmt.Errorf("Error running wget: %s", err)
 	}
 
-	unzipOut, err := unzip.StdoutPipe()
+	unzipOutput, err := unzip.Output()
 	if err != nil {
-		return nil, err
-	}
-	unzipErr, err := unzip.StderrPipe()
-	if err != nil {
-		return nil, err
-	}
-
-	err = unzip.Start()
-	if err != nil {
-		return nil, err
-	}
-	var unzipErrput, unzipOutput []byte
-	go func() {
-		unzipErrput, _ = ioutil.ReadAll(unzipErr)
-	}()
-	go func() {
-		unzipOutput, _ = ioutil.ReadAll(unzipOut)
-	}()
-	err = unzip.Wait()
-	if err != nil {
-		if strings.Contains(string(unzipErrput), "filename not matched:") {
+		if strings.Contains(err.Error(), "exit status 11") {
 			// os.Stderr.WriteString(fmt.Sprintf("[requires.txt] no requires.txt found in %s\n", uri))
 			return nil, nil
 		} else {
-			return nil, fmt.Errorf("Error running unzip on file %s: %s, [%s]", f.Name(), err, string(unzipErrput))
+			return nil, fmt.Errorf("Error running unzip on file %s: %s", f.Name(), err)
 		}
 	}
 
@@ -274,9 +254,8 @@ func main() {
 		if err != nil {
 			os.Stderr.WriteString(fmt.Sprintf("[ERROR] unable to parse pkg %s due to error: %s\n", pkg, err))
 		} else {
-			fmt.Println(pkg)
 			for _, req := range reqs {
-				fmt.Printf("  %+v\n", req.Name)
+				fmt.Printf("%s:%s\n", pkg, req.Name)
 			}
 		}
 	}
