@@ -16,10 +16,6 @@ type PackageIndex struct {
 	URI string
 }
 
-type Requirement struct {
-	Name string
-}
-
 func (p *PackageIndex) AllPackages() ([]string, error) {
 	pkgs := make([]string, 0)
 
@@ -137,7 +133,7 @@ func (p *PackageIndex) fetchRequiresZip(path string, isEgg bool) ([]*Requirement
 	}
 
 	rawReqs := strings.TrimSpace(string(unzipOutput))
-	return parseRequirements(rawReqs)
+	return ParseRequirements(rawReqs)
 }
 
 func (p *PackageIndex) fetchRequiresTar(path string) ([]*Requirement, error) {
@@ -180,7 +176,7 @@ func (p *PackageIndex) fetchRequiresTar(path string) ([]*Requirement, error) {
 		return nil, nil
 	}
 
-	return parseRequirements(rawReqs)
+	return ParseRequirements(rawReqs)
 }
 
 func lastTar(files []string) string {
@@ -208,36 +204,4 @@ func lastZip(files []string) string {
 		}
 	}
 	return ""
-}
-
-func parseRequirements(rawReqs string) ([]*Requirement, error) {
-	rawReqs = strings.TrimSpace(rawReqs)
-
-	reqStrs := strings.Split(rawReqs, "\n")
-	reqs := make([]*Requirement, 0)
-	for _, reqStr := range reqStrs {
-		if reqStr == "" {
-			continue
-		}
-
-		if req, err := parseRequirement(reqStr); err == nil {
-			reqs = append(reqs, req)
-		} else if reqHeaderRegexp.MatchString(reqStr) {
-			// do nothing
-		} else {
-			os.Stderr.WriteString(fmt.Sprintf("[req] Could not parse requirement: %s\n", err))
-		}
-	}
-	return reqs, nil
-}
-
-func parseRequirement(reqStr string) (*Requirement, error) {
-	reqStr = strings.TrimSpace(reqStr)
-	match := requirementRegexp.FindStringSubmatch(reqStr)
-	if len(match) != 5 {
-		return nil, fmt.Errorf("Expected match of length 5, but got %+v from '%s'", match, reqStr)
-	} else if match[0] != reqStr {
-		return nil, fmt.Errorf("Unable to parse requirement from string: '%s'", reqStr)
-	}
-	return &Requirement{Name: match[1]}, nil
 }
