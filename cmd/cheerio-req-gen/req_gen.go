@@ -2,14 +2,15 @@ package main
 
 import (
 	"fmt"
-	ppg "github.com/beyang/pypigraph"
+	"github.com/beyang/cheerio/py"
+	"github.com/beyang/cheerio/pypi"
 	"log"
 	"os"
 	"sync"
 )
 
 func main() {
-	pkgIndex := &ppg.PackageIndex{URI: "https://pypi.python.org"}
+	pkgIndex := &pypi.PackageIndex{URI: "https://pypi.python.org"}
 	pkgs, err := pkgIndex.AllPackages()
 	if err != nil {
 		os.Stderr.WriteString(fmt.Sprintf("[FATAL] %s\n", err))
@@ -35,9 +36,9 @@ func main() {
 				os.Stderr.WriteString(fmt.Sprintf("[ERROR] unable to parse pkg %s due to error: %s\n", pkg, err))
 			} else {
 				stdoutMu.Lock()
-				fmt.Println(ppg.NormalizedPkgName(pkg))
+				fmt.Println(py.NormalizedPkgName(pkg))
 				for _, req := range reqs {
-					fmt.Printf("%s:%s\n", ppg.NormalizedPkgName(pkg), ppg.NormalizedPkgName(req.Name))
+					fmt.Printf("%s:%s\n", py.NormalizedPkgName(pkg), py.NormalizedPkgName(req.Name))
 				}
 				stdoutMu.Unlock()
 			}

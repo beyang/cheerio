@@ -1,19 +1,20 @@
-package pypiquery
+package req
 
 import (
 	"bufio"
 	"fmt"
-	ppg "github.com/beyang/pypigraph"
+	"github.com/beyang/cheerio/py"
 	"os"
 	"path/filepath"
 	"strings"
 )
 
 var DefaultPyPI *PyPIGraph
+var DefaultPyPIFile = filepath.Join(os.Getenv("GOPATH"), "src/github.com/beyang/cheerio/data/pypi_graph")
 
 func init() {
 	var err error
-	DefaultPyPI, err = NewPyPIGraph(filepath.Join(os.Getenv("GOPATH"), "src/github.com/beyang/pypigraph/data/pypi_graph"))
+	DefaultPyPI, err = NewPyPIGraph(DefaultPyPIFile)
 	if err != nil {
 		panic(fmt.Sprintf("Cannot initialize default PyPI because: %s", err))
 	}
@@ -75,9 +76,9 @@ func NewPyPIGraph(file string) (*PyPIGraph, error) {
 }
 
 func (p *PyPIGraph) Requires(pkg string) []string {
-	return p.Req[ppg.NormalizedPkgName(pkg)]
+	return p.Req[py.NormalizedPkgName(pkg)]
 }
 
 func (p *PyPIGraph) RequiredBy(pkg string) []string {
-	return p.ReqBy[ppg.NormalizedPkgName(pkg)]
+	return p.ReqBy[py.NormalizedPkgName(pkg)]
 }

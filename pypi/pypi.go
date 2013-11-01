@@ -1,4 +1,4 @@
-package pypigraph
+package pypi
 
 import (
 	"fmt"
@@ -19,14 +19,6 @@ type PackageIndex struct {
 type Requirement struct {
 	Name string
 }
-
-var allPkgRegexp = regexp.MustCompile(`<a href='([A-Za-z0-9\._\-]+)'>([A-Za-z0-9\._\-]+)</a><br/>`)
-var pkgFilesRegexp = regexp.MustCompile(`<a href="([/A-Za-z0-9\._\-]+)#md5=[0-9a-z]+"[^>]*>([A-Za-z0-9\._\-]+)</a><br/>`)
-var tarRegexp = regexp.MustCompile(`[/A-Za-z0-9\._\-]+\.(?:tar\.(?:gz|bz2)|tgz)`)
-var zipRegexp = regexp.MustCompile(`[/A-Za-z0-9\._\-]+\.zip`)
-var eggRegexp = regexp.MustCompile(`[/A-Za-z0-9\._\-]+\.egg`)
-var requirementRegexp = regexp.MustCompile(`(?P<package>[A-Za-z0-9\._\-]+)(?:\[([A-Za-z0-9\._\-]+)\])?\s*(?:(?P<constraint>==|>=|>|<|<=)\s*(?P<version>[A-Za-z0-9\._\-]+)(?:\s*,\s*[<>=!]+\s*[a-z0-9\.]+)?)?`)
-var reqHeaderRegexp = regexp.MustCompile(`\[[A-Za-z0-9\._\-]+\]`)
 
 func (p *PackageIndex) AllPackages() ([]string, error) {
 	pkgs := make([]string, 0)
@@ -74,6 +66,14 @@ func (p *PackageIndex) PackageRequirements(pkg string) ([]*Requirement, error) {
 	}
 }
 
+var allPkgRegexp = regexp.MustCompile(`<a href='([A-Za-z0-9\._\-]+)'>([A-Za-z0-9\._\-]+)</a><br/>`)
+var pkgFilesRegexp = regexp.MustCompile(`<a href="([/A-Za-z0-9\._\-]+)#md5=[0-9a-z]+"[^>]*>([A-Za-z0-9\._\-]+)</a><br/>`)
+var tarRegexp = regexp.MustCompile(`[/A-Za-z0-9\._\-]+\.(?:tar\.(?:gz|bz2)|tgz)`)
+var zipRegexp = regexp.MustCompile(`[/A-Za-z0-9\._\-]+\.zip`)
+var eggRegexp = regexp.MustCompile(`[/A-Za-z0-9\._\-]+\.egg`)
+var requirementRegexp = regexp.MustCompile(`(?P<package>[A-Za-z0-9\._\-]+)(?:\[([A-Za-z0-9\._\-]+)\])?\s*(?:(?P<constraint>==|>=|>|<|<=)\s*(?P<version>[A-Za-z0-9\._\-]+)(?:\s*,\s*[<>=!]+\s*[a-z0-9\.]+)?)?`)
+var reqHeaderRegexp = regexp.MustCompile(`\[[A-Za-z0-9\._\-]+\]`)
+
 // Helpers
 
 func (p *PackageIndex) pkgFiles(pkg string) ([]string, error) {
@@ -99,10 +99,6 @@ func (p *PackageIndex) pkgFiles(pkg string) ([]string, error) {
 	}
 
 	return files, nil
-}
-
-func NormalizedPkgName(pkg string) string {
-	return strings.ToLower(pkg)
 }
 
 func (p *PackageIndex) fetchRequiresZip(path string, isEgg bool) ([]*Requirement, error) {
