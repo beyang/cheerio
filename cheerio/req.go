@@ -1,9 +1,8 @@
-package req
+package cheerio
 
 import (
 	"bufio"
 	"fmt"
-	"github.com/beyang/cheerio/py"
 	"os"
 	"path/filepath"
 	"strings"
@@ -76,9 +75,9 @@ func NewPyPIGraph(file string) (*PyPIGraph, error) {
 }
 
 func (p *PyPIGraph) Requires(pkg string) []string {
-	return p.Req[py.NormalizedPkgName(pkg)]
+	return p.Req[NormalizedPkgName(pkg)]
 }
 
 func (p *PyPIGraph) RequiredBy(pkg string) []string {
-	return p.ReqBy[py.NormalizedPkgName(pkg)]
+	return p.ReqBy[NormalizedPkgName(pkg)]
 }

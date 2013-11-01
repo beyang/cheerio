@@ -1,4 +1,4 @@
-package pypi
+package cheerio
 
 import (
 	"fmt"

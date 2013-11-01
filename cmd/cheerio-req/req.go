@@ -3,24 +3,23 @@ package main
 import (
 	"flag"
 	"fmt"
-	"github.com/beyang/cheerio/py"
-	"github.com/beyang/cheerio/req"
+	"github.com/beyang/cheerio/cheerio"
 	"os"
 	"strings"
 )
 
-var file = flag.String("graphfile", "", fmt.Sprintf("Path to PyPI dependency graph file.  Defaults to %s", req.DefaultPyPIFile))
+var file = flag.String("graphfile", "", fmt.Sprintf("Path to PyPI dependency graph file.  Defaults to %s", cheerio.DefaultPyPIFile))
 
 func main() {
 	flag.Parse()
-	pkg := py.NormalizedPkgName(flag.Arg(0))
+	pkg := cheerio.NormalizedPkgName(flag.Arg(0))
 
-	var pypiG *req.PyPIGraph
+	var pypiG *cheerio.PyPIGraph
 	if *file == "" {
-		pypiG = req.DefaultPyPI
+		pypiG = cheerio.DefaultPyPI
 	} else {
 		var err error
-		pypiG, err = req.NewPyPIGraph(*file)
+		pypiG, err = cheerio.NewPyPIGraph(*file)
 		if err != nil {
 			fmt.Printf("Error creating PyPI graph: %s\n", err)
 			os.Exit(1)

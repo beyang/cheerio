@@ -1,4 +1,4 @@
-package py
+package cheerio
 
 import (
 	"strings"

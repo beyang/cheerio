@@ -2,15 +2,14 @@ package main
 
 import (
 	"fmt"
-	"github.com/beyang/cheerio/py"
-	"github.com/beyang/cheerio/pypi"
+	"github.com/beyang/cheerio/cheerio"
 	"log"
 	"os"
 	"sync"
 )
 
 func main() {
-	pkgIndex := &pypi.PackageIndex{URI: "https://pypi.python.org"}
+	pkgIndex := &cheerio.PackageIndex{URI: "https://pypi.python.org"}
 	pkgs, err := pkgIndex.AllPackages()
 	if err != nil {
 		os.Stderr.WriteString(fmt.Sprintf("[FATAL] %s\n", err))
@@ -36,9 +35,9 @@ func main() {
 				os.Stderr.WriteString(fmt.Sprintf("[ERROR] unable to parse pkg %s due to error: %s\n", pkg, err))
 			} else {
 				stdoutMu.Lock()
-				fmt.Println(py.NormalizedPkgName(pkg))
+				fmt.Println(cheerio.NormalizedPkgName(pkg))
 				for _, req := range reqs {
-					fmt.Printf("%s:%s\n", py.NormalizedPkgName(pkg), py.NormalizedPkgName(req.Name))
+					fmt.Printf("%s:%s\n", cheerio.NormalizedPkgName(pkg), cheerio.NormalizedPkgName(req.Name))
 				}
 				stdoutMu.Unlock()
 			}
