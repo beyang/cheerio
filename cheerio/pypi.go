@@ -2,14 +2,12 @@ package cheerio
 
 import (
 	"fmt"
-	"io"
+	"github.com/beyang/cheerio/util"
 	"io/ioutil"
 	"net/http"
 	"os"
-	"os/exec"
 	"path/filepath"
 	"regexp"
-	"strings"
 )
 
 type PackageIndex struct {
@@ -98,85 +96,28 @@ func (p *PackageIndex) pkgFiles(pkg string) ([]string, error) {
 }
 
 func (p *PackageIndex) fetchRequiresZip(path string, isEgg bool) ([]*Requirement, error) {
-	f, err := ioutil.TempFile("", "pypigraph_zip")
-	if err != nil {
-		return nil, err
-	}
-	defer os.Remove(f.Name())
-	if err := f.Close(); err != nil {
-		return nil, err
-	}
-
 	uri := fmt.Sprintf("%s%s", p.URI, path)
-	wget := exec.Command("wget", uri, "-O", f.Name())
-	var eggInfoFilePattern string
+	var pattern string
 	if isEgg {
-		eggInfoFilePattern = "EGG-INFO/requires.txt"
+		pattern = "EGG-INFO/requires.txt"
 	} else {
-		eggInfoFilePattern = "**/*.egg-info/requires.txt"
+		pattern = "**/*.egg-info/requires.txt"
 	}
-	unzip := exec.Command("unzip", "-cq", f.Name(), eggInfoFilePattern)
 
-	err = wget.Run()
+	b, err := util.RemoteDecompress(uri, pattern, util.Zip)
 	if err != nil {
-		return nil, fmt.Errorf("Error running wget: %s", err)
+		return nil, err
 	}
-
-	unzipOutput, err := unzip.Output()
-	if err != nil {
-		if strings.Contains(err.Error(), "exit status 11") {
-			// os.Stderr.WriteString(fmt.Sprintf("[requires.txt] no requires.txt found in %s\n", uri))
-			return nil, nil
-		} else {
-			return nil, fmt.Errorf("Error running unzip on file %s: %s", f.Name(), err)
-		}
-	}
-
-	rawReqs := strings.TrimSpace(string(unzipOutput))
-	return ParseRequirements(rawReqs)
+	return ParseRequirements(string(b))
 }
 
 func (p *PackageIndex) fetchRequiresTar(path string) ([]*Requirement, error) {
 	uri := fmt.Sprintf("%s%s", p.URI, path)
-	curl := exec.Command("curl", uri)
-	tar := exec.Command("tar", "-xvO", "--include", "**/*.egg-info/requires.txt")
-
-	curlOut, err := curl.StdoutPipe()
+	b, err := util.RemoteDecompress(uri, "**/*.egg-info/requires.txt", util.Tar)
 	if err != nil {
 		return nil, err
 	}
-	tarIn, err := tar.StdinPipe()
-	if err != nil {
-		return nil, err
-	}
-	tarOut, err := tar.StdoutPipe()
-	if err != nil {
-		return nil, err
-	}
-
-	go func() {
-		io.Copy(tarIn, curlOut)
-		tarIn.Close()
-	}()
-
-	curl.Start()
-	tar.Start()
-
-	tarOutput, err := ioutil.ReadAll(tarOut)
-	if err != nil {
-		return nil, err
-	}
-
-	curl.Wait()
-	tar.Wait()
-
-	rawReqs := strings.TrimSpace(string(tarOutput))
-	if rawReqs == "" {
-		// os.Stderr.WriteString(fmt.Sprintf("[requires.txt] no requires.txt found in %s\n", uri))
-		return nil, nil
-	}
-
-	return ParseRequirements(rawReqs)
+	return ParseRequirements(string(b))
 }
 
 func lastTar(files []string) string {
