@@ -5,7 +5,6 @@ import (
 	"github.com/beyang/cheerio/util"
 	"io/ioutil"
 	"net/http"
-	"os"
 	"path/filepath"
 	"regexp"
 )
@@ -39,24 +38,34 @@ func (p *PackageIndex) AllPackages() ([]string, error) {
 	return pkgs, nil
 }
 
-func (p *PackageIndex) PackageRequirements(pkg string) ([]*Requirement, error) {
+func (p *PackageIndex) FetchPackageRequirements(pkg string) ([]*Requirement, error) {
+	tarPattern := "**/*.egg-info/requires.txt"
+	eggPattern := "EGG-INFO/requires.txt"
+	zipPattern := tarPattern
+
+	b, err := p.FetchRawMetadata(pkg, tarPattern, eggPattern, zipPattern)
+	if err != nil {
+		return nil, err
+	}
+	return ParseRequirements(string(b))
+}
+
+func (p *PackageIndex) FetchRawMetadata(pkg string, tarPattern, eggPattern, zipPattern string) ([]byte, error) {
 	files, err := p.pkgFiles(pkg)
 	if err != nil {
 		return nil, err
 	} else if len(files) == 0 {
-		// os.Stderr.WriteString(fmt.Sprintf("[no-files] no files found for pkg %s\n", pkg))
-		return nil, nil
+		return nil, fmt.Errorf("[no-files] no files found for pkg %s\n", pkg)
 	}
 
 	if path := lastTar(files); path != "" {
-		return p.fetchRequiresTar(path)
+		return util.RemoteDecompress(fmt.Sprintf("%s%s", p.URI, path), tarPattern, util.Tar)
 	} else if path := lastEgg(files); path != "" {
-		return p.fetchRequiresZip(path, true)
+		return util.RemoteDecompress(fmt.Sprintf("%s%s", p.URI, path), eggPattern, util.Zip)
 	} else if path := lastZip(files); path != "" {
-		return p.fetchRequiresZip(path, false)
+		return util.RemoteDecompress(fmt.Sprintf("%s%s", p.URI, path), zipPattern, util.Zip)
 	} else {
-		os.Stderr.WriteString(fmt.Sprintf("[tar/zip] no tar or zip found in %+v for pkg %s\n", files, pkg))
-		return nil, nil
+		return nil, fmt.Errorf("[tar/zip] no tar or zip found in %+v for pkg %s\n", files, pkg)
 	}
 }
 
@@ -94,32 +103,6 @@ func (p *PackageIndex) pkgFiles(pkg string) ([]string, error) {
 
 	return files, nil
 }
-
-func (p *PackageIndex) fetchRequiresZip(path string, isEgg bool) ([]*Requirement, error) {
-	uri := fmt.Sprintf("%s%s", p.URI, path)
-	var pattern string
-	if isEgg {
-		pattern = "EGG-INFO/requires.txt"
-	} else {
-		pattern = "**/*.egg-info/requires.txt"
-	}
-
-	b, err := util.RemoteDecompress(uri, pattern, util.Zip)
-	if err != nil {
-		return nil, err
-	}
-	return ParseRequirements(string(b))
-}
-
-func (p *PackageIndex) fetchRequiresTar(path string) ([]*Requirement, error) {
-	uri := fmt.Sprintf("%s%s", p.URI, path)
-	b, err := util.RemoteDecompress(uri, "**/*.egg-info/requires.txt", util.Tar)
-	if err != nil {
-		return nil, err
-	}
-	return ParseRequirements(string(b))
-}
-
 func lastTar(files []string) string {
 	for f := len(files) - 1; f >= 0; f-- {
 		if tarRegexp.MatchString(files[f]) {

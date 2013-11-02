@@ -30,7 +30,7 @@ func main() {
 			defer waiter.Done()
 			defer func() { <-throttle }()
 
-			reqs, err := pkgIndex.PackageRequirements(pkg)
+			reqs, err := pkgIndex.FetchPackageRequirements(pkg)
 			if err != nil {
 				os.Stderr.WriteString(fmt.Sprintf("[ERROR] unable to parse pkg %s due to error: %s\n", pkg, err))
 			} else {
