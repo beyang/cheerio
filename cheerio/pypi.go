@@ -9,6 +9,8 @@ import (
 	"regexp"
 )
 
+var DefaultPyPI = &PackageIndex{URI: "https://pypi.python.org"}
+
 type PackageIndex struct {
 	URI string
 }

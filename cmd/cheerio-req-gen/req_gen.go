@@ -9,7 +9,7 @@ import (
 )
 
 func main() {
-	pkgIndex := &cheerio.PackageIndex{URI: "https://pypi.python.org"}
+	pkgIndex := &cheerio.DefaultPyPI
 	pkgs, err := pkgIndex.AllPackages()
 	if err != nil {
 		os.Stderr.WriteString(fmt.Sprintf("[FATAL] %s\n", err))

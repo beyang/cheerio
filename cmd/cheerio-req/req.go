@@ -8,7 +8,7 @@ import (
 	"strings"
 )
 
-var file = flag.String("graphfile", "", fmt.Sprintf("Path to PyPI dependency graph file.  Defaults to %s", cheerio.DefaultPyPIFile))
+var file = flag.String("graphfile", "", fmt.Sprintf("Path to PyPI dependency graph file.  Defaults to %s", cheerio.DefaultPyPIGraphFile))
 
 func main() {
 	flag.Parse()
@@ -16,7 +16,7 @@ func main() {
 
 	var pypiG *cheerio.PyPIGraph
 	if *file == "" {
-		pypiG = cheerio.DefaultPyPI
+		pypiG = cheerio.DefaultPyPIGraph
 	} else {
 		var err error
 		pypiG, err = cheerio.NewPyPIGraph(*file)

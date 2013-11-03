@@ -8,12 +8,12 @@ import (
 	"strings"
 )
 
-var DefaultPyPI *PyPIGraph
-var DefaultPyPIFile = filepath.Join(os.Getenv("GOPATH"), "src/github.com/beyang/cheerio/data/pypi_graph")
+var DefaultPyPIGraph *PyPIGraph
+var DefaultPyPIGraphFile = filepath.Join(os.Getenv("GOPATH"), "src/github.com/beyang/cheerio/data/pypi_graph")
 
 func init() {
 	var err error
-	DefaultPyPI, err = NewPyPIGraph(DefaultPyPIFile)
+	DefaultPyPIGraph, err = NewPyPIGraph(DefaultPyPIGraphFile)
 	if err != nil {
 		panic(fmt.Sprintf("Cannot initialize default PyPI because: %s", err))
 	}
