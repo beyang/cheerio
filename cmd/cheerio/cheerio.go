@@ -3,7 +3,7 @@ package main
 import (
 	"flag"
 	"fmt"
-	"github.com/beyang/cheerio/cheerio"
+	"github.com/beyang/cheerio"
 	"log"
 	"os"
 	"strings"

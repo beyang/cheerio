@@ -7,7 +7,7 @@ Install
 -------
 Cheerio requires [Go](http://golang.org/doc/install).
 
-`go install github.com/beyang/cheerio/cheerio/...`
+`go install github.com/beyang/cheerio/...`
 
 Usage
 -----
