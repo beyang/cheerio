@@ -10,6 +10,7 @@ func TestFetchSourceRepoURI(t *testing.T) {
 		wantRepoURI string
 	}{
 		{"flask_cm", "https://github.com/futuregrid/flask_cm"},
+		{"zipaccess", "https://github.com/iki/zipaccess"},
 	}
 
 	for _, test := range tests {
