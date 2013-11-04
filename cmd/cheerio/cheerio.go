@@ -75,7 +75,7 @@ func mainReqs(args []string, flags *flag.FlagSet) {
 		fmt.Fprintf(os.Stderr, "Usage: %s %s <package-name>\n", os.Args[0], args[0])
 		flags.PrintDefaults()
 	}
-	file := flags.String("graphfile", "", fmt.Sprintf("Path to PyPI dependency graph file.  Defaults to %s", cheerio.DefaultPyPIGraphFile))
+	file := flags.String("graphfile", "", fmt.Sprintf("Path to PyPI dependency graph file.  Defaults to $GOPATH/src/github.com/beyang/cheerio/data/pypi_graph"))
 	flags.Parse(args[1:])
 
 	if flags.NArg() < 1 {

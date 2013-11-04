@@ -9,13 +9,22 @@ import (
 )
 
 var DefaultPyPIGraph *PyPIGraph
-var DefaultPyPIGraphFile = filepath.Join(os.Getenv("GOPATH"), "src/github.com/beyang/cheerio/data/pypi_graph")
 
 func init() {
+	var gopaths = strings.Split(os.Getenv("GOPATH"), ":")
+	var found = false
 	var err error
-	DefaultPyPIGraph, err = NewPyPIGraph(DefaultPyPIGraphFile)
-	if err != nil {
-		panic(fmt.Sprintf("Cannot initialize default PyPI because: %s", err))
+	for _, gopath := range gopaths {
+		var DefaultPyPIGraphFile = filepath.Join(gopath, "src/github.com/beyang/cheerio/data/pypi_graph")
+		DefaultPyPIGraph, err = NewPyPIGraph(DefaultPyPIGraphFile)
+		if err == nil {
+			found = true
+			break
+		}
+	}
+
+	if !found {
+		panic(fmt.Sprintf("Could not initialize default PyPI, last error: %s", err))
 	}
 }
 
