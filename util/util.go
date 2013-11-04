@@ -1,11 +1,16 @@
 package util
 
 import (
+	"archive/tar"
+	"bytes"
+	"compress/gzip"
 	"fmt"
 	"io"
 	"io/ioutil"
+	"net/http"
 	"os"
 	"os/exec"
+	"path/filepath"
 	"strings"
 )
 
@@ -27,39 +32,37 @@ func RemoteDecompress(uri string, pattern string, compressType CompressionType) 
 }
 
 func remoteUntar(uri string, pattern string) ([]byte, error) {
-	curl := exec.Command("curl", uri)
-	tar := exec.Command("tar", "-xvO", "--include", pattern)
+	resp, err := http.Get(uri)
+	if err != nil {
+		return nil, err
+	}
+	defer resp.Body.Close()
 
-	curlOut, err := curl.StdoutPipe()
-	if err != nil {
-		return nil, err
-	}
-	tarIn, err := tar.StdinPipe()
-	if err != nil {
-		return nil, err
-	}
-	tarOut, err := tar.StdoutPipe()
+	gunzipped, err := gzip.NewReader(resp.Body)
 	if err != nil {
 		return nil, err
 	}
 
-	go func() {
-		io.Copy(tarIn, curlOut)
-		tarIn.Close()
-	}()
+	tr := tar.NewReader(gunzipped)
+	var data []byte
+	for {
+		hdr, err := tr.Next()
+		if err == io.EOF {
+			break
+		}
 
-	curl.Start()
-	tar.Start()
-
-	tarOutput, err := ioutil.ReadAll(tarOut)
-	if err != nil {
-		return nil, err
+		matches, err := filepath.Match(pattern, hdr.Name)
+		if err != nil {
+			return nil, err
+		}
+		if matches {
+			buf := bytes.NewBuffer(make([]byte, 0, hdr.Size))
+			io.Copy(buf, tr)
+			data = append(data, buf.Bytes()...)
+		}
 	}
 
-	curl.Wait()
-	tar.Wait()
-
-	return tarOutput, nil
+	return data, nil
 }
 
 func remoteUnzip(uri string, pattern string) ([]byte, error) {
