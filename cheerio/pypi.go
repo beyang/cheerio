@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"path/filepath"
 	"regexp"
+	"strings"
 )
 
 var DefaultPyPI = &PackageIndex{URI: "https://pypi.python.org"}
@@ -47,7 +48,11 @@ func (p *PackageIndex) FetchPackageRequirements(pkg string) ([]*Requirement, err
 
 	b, err := p.FetchRawMetadata(pkg, tarPattern, eggPattern, zipPattern)
 	if err != nil {
-		return nil, err
+		if strings.Contains(err.Error(), "[no-files]") { // may not have a requires.txt
+			return nil, nil
+		} else {
+			return nil, err
+		}
 	}
 	return ParseRequirements(string(b))
 }
@@ -57,7 +62,7 @@ func (p *PackageIndex) FetchRawMetadata(pkg string, tarPattern, eggPattern, zipP
 	if err != nil {
 		return nil, err
 	} else if len(files) == 0 {
-		return nil, fmt.Errorf("[no-files] no files found for pkg %s\n", pkg)
+		return nil, fmt.Errorf("[no-files] no files found for pkg %s", pkg)
 	}
 
 	if path := lastTar(files); path != "" {
@@ -67,7 +72,7 @@ func (p *PackageIndex) FetchRawMetadata(pkg string, tarPattern, eggPattern, zipP
 	} else if path := lastZip(files); path != "" {
 		return util.RemoteDecompress(fmt.Sprintf("%s%s", p.URI, path), zipPattern, util.Zip)
 	} else {
-		return nil, fmt.Errorf("[tar/zip] no tar or zip found in %+v for pkg %s\n", files, pkg)
+		return nil, fmt.Errorf("[tar/zip] no tar or zip found in %+v for pkg %s", files, pkg)
 	}
 }
 
