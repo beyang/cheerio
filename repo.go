@@ -6,9 +6,9 @@ import (
 )
 
 var repoPatterns = []*regexp.Regexp{
-	regexp.MustCompile(`Home-page: (https?://github.com/(:?[^/\n]+)/(:?[^/\n]+))(:?/.*)?\n`),
-	regexp.MustCompile(`Home-page: (https?://bitbucket.org/(:?[^/\n]+)/(:?[^/\n]+))(:?/.*)?\n`),
-	regexp.MustCompile(`Home-page: (https?://code.google.com/p/(:?[^/\n]+))(:?/.*)?\n`),
+	regexp.MustCompile(`Home-page: (https?://github.com/(:?[^/\n\r]+)/(:?[^/\n\r]+))(:?/.*)?\s`),
+	regexp.MustCompile(`Home-page: (https?://bitbucket.org/(:?[^/\n\r]+)/(:?[^/\n\r]+))(:?/.*)?\s`),
+	regexp.MustCompile(`Home-page: (https?://code.google.com/p/(:?[^/\n\r]+))(:?/.*)?\s`),
 }
 
 var homepageRegexp = regexp.MustCompile(`Home-page: (.+)\n`)
