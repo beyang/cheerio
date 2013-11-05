@@ -2,16 +2,14 @@ package util
 
 import (
 	"archive/tar"
+	"archive/zip"
 	"bytes"
 	"compress/gzip"
 	"fmt"
 	"io"
 	"io/ioutil"
 	"net/http"
-	"os"
-	"os/exec"
 	"path/filepath"
-	"strings"
 )
 
 type CompressionType string
@@ -66,32 +64,41 @@ func remoteUntar(uri string, pattern string) ([]byte, error) {
 }
 
 func remoteUnzip(uri string, pattern string) ([]byte, error) {
-	// Since zip cannot decompress from stdin, we need to save a temporary file
-	f, err := ioutil.TempFile("", "cheerio_unzip")
+	resp, err := http.Get(uri)
 	if err != nil {
 		return nil, err
 	}
-	defer os.Remove(f.Name())
-	if err := f.Close(); err != nil {
+	defer resp.Body.Close()
+
+	zipdata, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
 		return nil, err
 	}
 
-	wget := exec.Command("wget", uri, "-O", f.Name())
-	unzip := exec.Command("unzip", "-cq", f.Name(), pattern)
-
-	err = wget.Run()
+	zr, err := zip.NewReader(bytes.NewReader(zipdata), resp.ContentLength)
 	if err != nil {
-		return nil, fmt.Errorf("Error running wget: %s", err)
+		return nil, err
 	}
 
-	unzipOutput, err := unzip.Output()
-	if err != nil {
-		if strings.Contains(err.Error(), "exit status 11") {
-			return nil, nil // TODO: should return the error to let client handle; need to make tar consistent with this, too
-		} else {
-			return nil, fmt.Errorf("Error running unzip on file %s: %s", f.Name(), err)
+	var data []byte
+	for _, file := range zr.File {
+		matches, err := filepath.Match(pattern, file.Name)
+		if err != nil {
+			return nil, err
+		}
+		if matches {
+			fr, err := file.Open()
+			if err != nil {
+				return nil, err
+			}
+			defer fr.Close()
+			filedata, err := ioutil.ReadAll(fr)
+			if err != nil {
+				return nil, err
+			}
+			data = append(data, filedata...)
 		}
 	}
 
-	return unzipOutput, nil
+	return data, nil
 }
