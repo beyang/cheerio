@@ -11,15 +11,17 @@ import (
 )
 
 const (
-	Cmd_Repo   = "repo"
-	Cmd_Reqs   = "reqs"
-	Cmd_ReqGen = "reqs-generate"
+	Cmd_Repo     = "repo"
+	Cmd_Reqs     = "reqs"
+	Cmd_ReqGen   = "reqs-generate"
+	Cmd_TopLevel = "toplevel"
 )
 
 var Commands = map[string]func(args []string, flags *flag.FlagSet){
-	Cmd_Repo:   mainRepo,
-	Cmd_Reqs:   mainReqs,
-	Cmd_ReqGen: mainReqGen,
+	Cmd_Repo:     mainRepo,
+	Cmd_Reqs:     mainReqs,
+	Cmd_ReqGen:   mainReqGen,
+	Cmd_TopLevel: mainTopLevel,
 }
 
 func main() {
@@ -67,6 +69,27 @@ func mainRepo(args []string, flags *flag.FlagSet) {
 		fmt.Printf("Error: %s\n", err)
 	} else {
 		fmt.Println(repo)
+	}
+}
+
+func mainTopLevel(args []string, flags *flag.FlagSet) {
+	flags.Usage = func() {
+		fmt.Fprintf(os.Stderr, "Usage: %s %s <package-name>\n", os.Args[0], args[0])
+	}
+	flags.Parse(args[1:])
+
+	if flags.NArg() < 1 {
+		flags.Usage()
+		os.Exit(1)
+	}
+
+	pkg := cheerio.NormalizedPkgName(flags.Arg(0))
+
+	modules, err := cheerio.DefaultPyPI.FetchSourceTopLevelModules(pkg)
+	if err != nil {
+		fmt.Printf("Error: %s\n", err)
+	} else {
+		fmt.Println(strings.Join(modules, " "))
 	}
 }
 
