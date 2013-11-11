@@ -43,6 +43,7 @@ func remoteUntar(uri string, pattern string) ([]byte, error) {
 
 	tr := tar.NewReader(gunzipped)
 	var data []byte
+	matched := false
 	for {
 		hdr, err := tr.Next()
 		if err == io.EOF {
@@ -57,7 +58,11 @@ func remoteUntar(uri string, pattern string) ([]byte, error) {
 			buf := bytes.NewBuffer(make([]byte, 0, hdr.Size))
 			io.Copy(buf, tr)
 			data = append(data, buf.Bytes()...)
+			matched = true
 		}
+	}
+	if !matched {
+		return nil, fmt.Errorf("No file matched pattern %s", pattern)
 	}
 
 	return data, nil
@@ -81,6 +86,7 @@ func remoteUnzip(uri string, pattern string) ([]byte, error) {
 	}
 
 	var data []byte
+	matched := false
 	for _, file := range zr.File {
 		matches, err := filepath.Match(pattern, file.Name)
 		if err != nil {
@@ -97,7 +103,11 @@ func remoteUnzip(uri string, pattern string) ([]byte, error) {
 				return nil, err
 			}
 			data = append(data, filedata...)
+			matched = true
 		}
+	}
+	if !matched {
+		return nil, fmt.Errorf("No file matched pattern %s", pattern)
 	}
 
 	return data, nil
