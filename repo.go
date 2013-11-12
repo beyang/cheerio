@@ -17,7 +17,7 @@ func (p *PackageIndex) FetchSourceRepoURI(pkg string) (string, error) {
 	pattern := "**/PKG-INFO"
 	b, err := p.FetchRawMetadata(pkg, pattern, pattern, pattern)
 	if err != nil {
-		return "", nil
+		return "", err
 	}
 	rawMetadata := string(b)
 
