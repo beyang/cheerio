@@ -37,4 +37,4 @@ Known issues
 
 TODO
 ----
-* mock pypi and add some unit tests
+* mock pypi and add more unit tests
