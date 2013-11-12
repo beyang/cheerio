@@ -31,7 +31,9 @@ It can be regenerated with `cheerio reqs-generate > <cache-file>`.  You can also
 
 Known issues
 ------------
-* does not correctly parse requirements for PyPI packages that contain multiple top-level packages (this is fairly rare)
+* Does not correctly parse requirements for PyPI packages that contain multiple top-level packages (this is fairly rare)
+* In querying PyPI metadata, cheerio fetches the last tarball/egg-file/zip-file listed by PyPI.  The ordering is alphanumeric, rather than by upload
+  date.  Therefore, metadata for some packages (e.g., Flask) may be fetched from previous versions and thus be stale.
 
 TODO
 ----
