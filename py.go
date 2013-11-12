@@ -7,7 +7,9 @@ import (
 )
 
 type Requirement struct {
-	Name string
+	Name       string
+	Constraint string
+	Version    string
 }
 
 func ParseRequirements(rawReqs string) ([]*Requirement, error) {
@@ -39,7 +41,11 @@ func ParseRequirement(reqStr string) (*Requirement, error) {
 	} else if match[0] != reqStr {
 		return nil, fmt.Errorf("Unable to parse requirement from string: '%s'", reqStr)
 	}
-	return &Requirement{Name: match[1]}, nil
+	return &Requirement{
+		Name:       match[1],
+		Constraint: match[3],
+		Version:    match[4],
+	}, nil
 }
 
 func NormalizedPkgName(pkg string) string {
