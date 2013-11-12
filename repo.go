@@ -17,7 +17,12 @@ func (p *PackageIndex) FetchSourceRepoURI(pkg string) (string, error) {
 	pattern := "**/PKG-INFO"
 	b, err := p.FetchRawMetadata(pkg, pattern, pattern, pattern)
 	if err != nil {
-		return "", err
+		// Try to fall back to hard-coded URIs
+		if hardURI, in := pypiRepos[NormalizedPkgName(pkg)]; in {
+			return fmt.Sprintf("https://%s", hardURI), nil
+		} else {
+			return "", err
+		}
 	}
 	rawMetadata := string(b)
 
@@ -99,6 +104,7 @@ var pypiRepos = map[string]string{
 	"tornado":               "github.com/facebook/tornado",
 	"translationstring":     "github.com/Pylons/translationstring",
 	"tulip":                 "github.com/sourcegraph/tulip",
+	"twisted":               "github.com/twisted/twisted",
 	"venusian":              "github.com/Pylons/venusian",
 	"webob":                 "github.com/Pylons/webob",
 	"webpy":                 "github.com/webpy/webpy",

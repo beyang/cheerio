@@ -28,4 +28,5 @@ func (p *PackageIndex) FetchSourceTopLevelModules(pkg string) ([]string, error) 
 var pypiTopLevelModules = map[string][]string{
 	"pyyaml":          []string{"yaml"},
 	"django-tastypie": []string{"tastypie"},
+	"twisted":         []string{"twisted"},
 }
