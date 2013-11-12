@@ -3,6 +3,7 @@ package cheerio
 import (
 	"fmt"
 	"github.com/beyang/cheerio/util"
+	"github.com/beyang/go-version"
 	"io/ioutil"
 	"net/http"
 	"path/filepath"
@@ -66,6 +67,10 @@ func (p *PackageIndex) FetchRawMetadata(pkg string, tarPattern, eggPattern, zipP
 		return nil, fmt.Errorf("[no-files] no files found for pkg %s", pkg)
 	}
 
+	// Sort files in version order
+	version.Sort(files)
+
+	// Get the latest version
 	if path := lastTar(files); path != "" {
 		return util.RemoteDecompress(fmt.Sprintf("%s%s", p.URI, path), tarPattern, util.Tar)
 	} else if path := lastEgg(files); path != "" {
