@@ -149,7 +149,9 @@ func mainReqGen(args []string, flags *flag.FlagSet) {
 
 			reqs, err := pkgIndex.FetchPackageRequirements(pkg)
 			if err != nil {
-				os.Stderr.WriteString(fmt.Sprintf("[ERROR] unable to parse pkg %s due to error: %s\n", pkg, err))
+				if !strings.Contains(err.Error(), "No file matched pattern") { // ignore archives that don't contain requires.txt
+					os.Stderr.WriteString(fmt.Sprintf("[ERROR] unable to parse pkg %s due to error: %s\n", pkg, err))
+				}
 			} else {
 				stdoutMu.Lock()
 				fmt.Println(cheerio.NormalizedPkgName(pkg))
