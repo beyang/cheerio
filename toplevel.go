@@ -1,12 +1,14 @@
 package cheerio
 
 import (
+	"regexp"
 	"strings"
 )
 
+var topLevelTxtPattern = regexp.MustCompile(`(?:[^/]+/)*(?:[^/]*\.egg\-info/top_level\.txt)`)
+
 func (p *PackageIndex) FetchSourceTopLevelModules(pkg string) ([]string, error) {
-	pattern := "**/*.egg-info/top_level.txt"
-	b, err := p.FetchRawMetadata(pkg, pattern, pattern, pattern)
+	b, err := p.FetchRawMetadata(pkg, topLevelTxtPattern, topLevelTxtPattern, topLevelTxtPattern)
 	if err != nil {
 		// If error, try to fall back to hard-coded top-level modules
 		if hardCodedModules, in := pypiTopLevelModules[pkg]; in {

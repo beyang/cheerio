@@ -43,12 +43,13 @@ func (p *PackageIndex) AllPackages() ([]string, error) {
 	return pkgs, nil
 }
 
-func (p *PackageIndex) FetchPackageRequirements(pkg string) ([]*Requirement, error) {
-	tarPattern := "**/*.egg-info/requires.txt"
-	eggPattern := "EGG-INFO/requires.txt"
-	zipPattern := tarPattern
+var requiresTxtTarPattern = regexp.MustCompile(`(?:[^/]+/)*(?:[^/]*\.egg\-info/requires\.txt)`)
+var requiresTxtEggPattern = regexp.MustCompile(`EGG\-INFO/requires\.txt`)
+var requiresTxtZipPattern = requiresTxtTarPattern
 
-	b, err := p.FetchRawMetadata(pkg, tarPattern, eggPattern, zipPattern)
+func (p *PackageIndex) FetchPackageRequirements(pkg string) ([]*Requirement, error) {
+
+	b, err := p.FetchRawMetadata(pkg, requiresTxtTarPattern, requiresTxtEggPattern, requiresTxtZipPattern)
 	if err != nil {
 		if strings.Contains(err.Error(), "[no-files]") { // may not have a requires.txt
 			return nil, nil
@@ -59,7 +60,7 @@ func (p *PackageIndex) FetchPackageRequirements(pkg string) ([]*Requirement, err
 	return ParseRequirements(string(b))
 }
 
-func (p *PackageIndex) FetchRawMetadata(pkg string, tarPattern, eggPattern, zipPattern string) ([]byte, error) {
+func (p *PackageIndex) FetchRawMetadata(pkg string, tarPattern, eggPattern, zipPattern *regexp.Regexp) ([]byte, error) {
 	files, err := p.pkgFiles(pkg)
 	if err != nil {
 		return nil, err

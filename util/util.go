@@ -9,7 +9,7 @@ import (
 	"io"
 	"io/ioutil"
 	"net/http"
-	"path/filepath"
+	"regexp"
 )
 
 type CompressionType string
@@ -19,7 +19,7 @@ const (
 	Tar                 = "tar"
 )
 
-func RemoteDecompress(uri string, pattern string, compressType CompressionType) ([]byte, error) {
+func RemoteDecompress(uri string, pattern *regexp.Regexp, compressType CompressionType) ([]byte, error) {
 	switch compressType {
 	case Zip:
 		return remoteUnzip(uri, pattern)
@@ -29,7 +29,7 @@ func RemoteDecompress(uri string, pattern string, compressType CompressionType) 
 	return nil, fmt.Errorf("Unrecognized compression type: %s", compressType)
 }
 
-func remoteUntar(uri string, pattern string) ([]byte, error) {
+func remoteUntar(uri string, pattern *regexp.Regexp) ([]byte, error) {
 	resp, err := http.Get(uri)
 	if err != nil {
 		return nil, err
@@ -50,11 +50,7 @@ func remoteUntar(uri string, pattern string) ([]byte, error) {
 			break
 		}
 
-		matches, err := filepath.Match(pattern, hdr.Name)
-		if err != nil {
-			return nil, err
-		}
-		if matches {
+		if pattern.MatchString(hdr.Name) {
 			buf := bytes.NewBuffer(make([]byte, 0, hdr.Size))
 			io.Copy(buf, tr)
 			data = append(data, buf.Bytes()...)
@@ -62,13 +58,13 @@ func remoteUntar(uri string, pattern string) ([]byte, error) {
 		}
 	}
 	if !matched {
-		return nil, fmt.Errorf("No file matched pattern %s", pattern)
+		return nil, fmt.Errorf("No file matched pattern %+v", pattern)
 	}
 
 	return data, nil
 }
 
-func remoteUnzip(uri string, pattern string) ([]byte, error) {
+func remoteUnzip(uri string, pattern *regexp.Regexp) ([]byte, error) {
 	resp, err := http.Get(uri)
 	if err != nil {
 		return nil, err
@@ -88,11 +84,7 @@ func remoteUnzip(uri string, pattern string) ([]byte, error) {
 	var data []byte
 	matched := false
 	for _, file := range zr.File {
-		matches, err := filepath.Match(pattern, file.Name)
-		if err != nil {
-			return nil, err
-		}
-		if matches {
+		if pattern.MatchString(file.Name) {
 			fr, err := file.Open()
 			if err != nil {
 				return nil, err
@@ -107,7 +99,7 @@ func remoteUnzip(uri string, pattern string) ([]byte, error) {
 		}
 	}
 	if !matched {
-		return nil, fmt.Errorf("No file matched pattern %s", pattern)
+		return nil, fmt.Errorf("No file matched pattern %+v", pattern)
 	}
 
 	return data, nil

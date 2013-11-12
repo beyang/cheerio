@@ -5,17 +5,17 @@ import (
 	"regexp"
 )
 
+var homepageRegexp = regexp.MustCompile(`Home-page: (.+)\n`)
 var repoPatterns = []*regexp.Regexp{
 	regexp.MustCompile(`Home-page: (https?://github.com/(:?[^/\n\r]+)/(:?[^/\n\r]+))(:?/.*)?\s`),
 	regexp.MustCompile(`Home-page: (https?://bitbucket.org/(:?[^/\n\r]+)/(:?[^/\n\r]+))(:?/.*)?\s`),
 	regexp.MustCompile(`Home-page: (https?://code.google.com/p/(:?[^/\n\r]+))(:?/.*)?\s`),
 }
 
-var homepageRegexp = regexp.MustCompile(`Home-page: (.+)\n`)
+var pkgInfoPattern = regexp.MustCompile(`(?:[^/]+/)*PKG\-INFO`)
 
 func (p *PackageIndex) FetchSourceRepoURI(pkg string) (string, error) {
-	pattern := "**/PKG-INFO"
-	b, err := p.FetchRawMetadata(pkg, pattern, pattern, pattern)
+	b, err := p.FetchRawMetadata(pkg, pkgInfoPattern, pkgInfoPattern, pkgInfoPattern)
 	if err != nil {
 		// Try to fall back to hard-coded URIs
 		if hardURI, in := pypiRepos[NormalizedPkgName(pkg)]; in {
