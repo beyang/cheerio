@@ -4,11 +4,13 @@ import (
 	"archive/tar"
 	"archive/zip"
 	"bytes"
+	"compress/bzip2"
 	"compress/gzip"
 	"fmt"
 	"io"
 	"io/ioutil"
 	"net/http"
+	"path/filepath"
 	"regexp"
 )
 
@@ -36,12 +38,17 @@ func remoteUntar(uri string, pattern *regexp.Regexp) ([]byte, error) {
 	}
 	defer resp.Body.Close()
 
-	gunzipped, err := gzip.NewReader(resp.Body)
-	if err != nil {
-		return nil, err
+	var decompressed io.Reader
+	if filepath.Ext(uri) == ".bz2" {
+		decompressed = bzip2.NewReader(resp.Body)
+	} else {
+		decompressed, err = gzip.NewReader(resp.Body)
+		if err != nil {
+			return nil, err
+		}
 	}
 
-	tr := tar.NewReader(gunzipped)
+	tr := tar.NewReader(decompressed)
 	var data []byte
 	matched := false
 	for {

@@ -125,6 +125,14 @@ func mainReqs(args []string, flags *flag.FlagSet) {
 	fmt.Printf("pkg %s uses (%d):\n  %s\nand is used by (%d):\n  %s\n", pkg, len(pkgReq), strings.Join(pkgReq, " "), len(pkgReqBy), strings.Join(pkgReqBy, " "))
 }
 
+// Prints PyPI requirement graph to stdout in the below format. Skips errors (including packages where there is no requires.txt file).
+// Example format:
+//
+// pkg1
+// pkg1:pkg2
+// pkg1:pkg3
+// pkg2
+// pkg2:pkg4
 func mainReqGen(args []string, flags *flag.FlagSet) {
 	pkgIndex := &cheerio.DefaultPyPI
 	pkgs, err := pkgIndex.AllPackages()

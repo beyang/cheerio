@@ -47,8 +47,9 @@ var requiresTxtTarPattern = regexp.MustCompile(`(?:[^/]+/)*(?:[^/]*\.egg\-info/r
 var requiresTxtEggPattern = regexp.MustCompile(`EGG\-INFO/requires\.txt`)
 var requiresTxtZipPattern = requiresTxtTarPattern
 
+// Fetches package requirements from PyPI by downloading the package archive and extracting the requires.txt file.  If no such file exists (sometimes
+// it doesn't), returns an error.
 func (p *PackageIndex) FetchPackageRequirements(pkg string) ([]*Requirement, error) {
-
 	b, err := p.FetchRawMetadata(pkg, requiresTxtTarPattern, requiresTxtEggPattern, requiresTxtZipPattern)
 	if err != nil {
 		if strings.Contains(err.Error(), "[no-files]") { // may not have a requires.txt
