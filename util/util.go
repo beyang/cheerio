@@ -55,6 +55,8 @@ func remoteUntar(uri string, pattern *regexp.Regexp) ([]byte, error) {
 		hdr, err := tr.Next()
 		if err == io.EOF {
 			break
+		} else if hdr == nil {
+			return nil, fmt.Errorf("Error untarring %s: nil header (may be malformed)", uri)
 		}
 
 		if pattern.MatchString(hdr.Name) {
@@ -91,6 +93,10 @@ func remoteUnzip(uri string, pattern *regexp.Regexp) ([]byte, error) {
 	var data []byte
 	matched := false
 	for _, file := range zr.File {
+		if file == nil {
+			return nil, fmt.Errorf("Error unzipping %s: nil file (may be malformed)", uri)
+		}
+
 		if pattern.MatchString(file.Name) {
 			fr, err := file.Open()
 			if err != nil {
