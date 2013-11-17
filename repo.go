@@ -48,6 +48,7 @@ func (p *PackageIndex) FetchSourceRepoURI(pkg string) (string, error) {
 var pypiRepos = map[string]string{
 	"ansible":               "github.com/ansible/ansible",
 	"apache-libcloud":       "github.com/apache/libcloud",
+	"autobahn":              "github.com/tavendo/AutobahnPython",
 	"bottle":                "github.com/bottlepy/bottle",
 	"celery":                "github.com/celery/celery",
 	"chameleon":             "github.com/malthe/chameleon",
