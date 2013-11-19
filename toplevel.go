@@ -31,4 +31,5 @@ var pypiTopLevelModules = map[string][]string{
 	"pyyaml":          []string{"yaml"},
 	"django-tastypie": []string{"tastypie"},
 	"twisted":         []string{"twisted"},
+	"apache-libcloud": []string{"libcloud"},
 }
