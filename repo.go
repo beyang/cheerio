@@ -46,6 +46,7 @@ func (p *PackageIndex) FetchSourceRepoURI(pkg string) (string, error) {
 }
 
 var pypiRepos = map[string]string{
+	"ajenti":                "github.com/Eugeny/ajenti",
 	"ansible":               "github.com/ansible/ansible",
 	"apache-libcloud":       "github.com/apache/libcloud",
 	"autobahn":              "github.com/tavendo/AutobahnPython",
@@ -88,9 +89,11 @@ var pypiRepos = map[string]string{
 	"pattern":               "github.com/clips/pattern",
 	"psycopg2":              "github.com/psycopg/psycopg2",
 	"pyramid":               "github.com/Pylons/pyramid",
+	"python-catcher":        "github.com/Eugeny/catcher",
 	"python-dateutil":       "github.com/paxan/python-dateutil",
 	"python-lust":           "github.com/zedshaw/python-lust",
 	"pyyaml":                "github.com/yaml/pyyaml",
+	"reconfigure":           "github.com/Eugeny/reconfigure",
 	"repoze.lru":            "github.com/repoze/repoze.lru",
 	"requests":              "github.com/kennethreitz/requests",
 	"salt":                  "github.com/saltstack/salt",
