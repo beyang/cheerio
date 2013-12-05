@@ -4,23 +4,23 @@ import (
 	"testing"
 )
 
-func TestFetchSourceRepoURI(t *testing.T) {
+func TestFetchSourceRepoURL(t *testing.T) {
 	tests := []struct {
 		pkg         string
-		wantRepoURI string
+		wantRepoURL string
 	}{
 		{"flask_cm", "https://github.com/futuregrid/flask_cm"},
 		{"zipaccess", "https://github.com/iki/zipaccess"},
 	}
 
 	for _, test := range tests {
-		repoURI, err := DefaultPyPI.FetchSourceRepoURI(test.pkg)
+		repoURL, err := DefaultPyPI.FetchSourceRepoURL(test.pkg)
 		if err != nil {
-			t.Error("FetchSourceRepoURI error:", err)
+			t.Error("FetchSourceRepoURL error:", err)
 			continue
 		}
-		if test.wantRepoURI != repoURI {
-			t.Errorf("%s: want repoURI == %q, got %q", test.pkg, test.wantRepoURI, repoURI)
+		if test.wantRepoURL != repoURL {
+			t.Errorf("%s: want repoURL == %q, got %q", test.pkg, test.wantRepoURL, repoURL)
 		}
 	}
 }
