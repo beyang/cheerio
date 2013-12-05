@@ -19,7 +19,7 @@ func (p *PackageIndex) FetchSourceRepoURL(pkg string) (string, error) {
 	if err != nil {
 		// Try to fall back to hard-coded URLs
 		if hardURL, in := pypiRepos[NormalizedPkgName(pkg)]; in {
-			return fmt.Sprintf("https://%s", hardURL), nil
+			return hardURL, nil
 		} else {
 			return "", err
 		}
@@ -35,7 +35,7 @@ func (p *PackageIndex) FetchSourceRepoURL(pkg string) (string, error) {
 
 	// Try to fall back to hard-coded URLs
 	if hardURL, in := pypiRepos[NormalizedPkgName(pkg)]; in {
-		return fmt.Sprintf("https://%s", hardURL), nil
+		return hardURL, nil
 	}
 
 	// Return most informative error
