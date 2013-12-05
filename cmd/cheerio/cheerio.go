@@ -64,7 +64,7 @@ func mainRepo(args []string, flags *flag.FlagSet) {
 
 	pkg := cheerio.NormalizedPkgName(flags.Arg(0))
 
-	repo, err := cheerio.DefaultPyPI.FetchSourceRepoURI(pkg)
+	repo, err := cheerio.DefaultPyPI.FetchSourceRepoURL(pkg)
 	if err != nil {
 		fmt.Printf("Error: %s\n", err)
 	} else {
