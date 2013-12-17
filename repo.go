@@ -50,7 +50,7 @@ var pypiRepos = map[string]string{
 	"ansible":               "git://github.com/ansible/ansible",
 	"apache-libcloud":       "git://github.com/apache/libcloud",
 	"autobahn":              "git://github.com/tavendo/AutobahnPython",
-	"bottle":                "git://github.com/bottlepy/bottle",
+	"bottle":                "git://github.com/defnull/bottle",
 	"celery":                "git://github.com/celery/celery",
 	"chameleon":             "git://github.com/malthe/chameleon",
 	"coverage":              "https://bitbucket.org/ned/coveragepy",
