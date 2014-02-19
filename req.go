@@ -6,26 +6,31 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+	"sync"
 )
 
 var DefaultPyPIGraph *PyPIGraph
 
-func init() {
-	var gopaths = strings.Split(os.Getenv("GOPATH"), ":")
-	var found = false
-	var err error
-	for _, gopath := range gopaths {
-		var DefaultPyPIGraphFile = filepath.Join(gopath, "src/github.com/beyang/cheerio/data/pypi_graph")
-		DefaultPyPIGraph, err = NewPyPIGraph(DefaultPyPIGraphFile)
-		if err == nil {
-			found = true
-			break
-		}
-	}
+var loadOnce sync.Once
 
-	if !found {
-		panic(fmt.Sprintf("Could not initialize default PyPI, last error: %s", err))
-	}
+func Load() {
+	loadOnce.Do(func() {
+		var gopaths = strings.Split(os.Getenv("GOPATH"), ":")
+		var found = false
+		var err error
+		for _, gopath := range gopaths {
+			var DefaultPyPIGraphFile = filepath.Join(gopath, "src/github.com/beyang/cheerio/data/pypi_graph")
+			DefaultPyPIGraph, err = NewPyPIGraph(DefaultPyPIGraphFile)
+			if err == nil {
+				found = true
+				break
+			}
+		}
+
+		if !found {
+			panic(fmt.Sprintf("Could not initialize default PyPI, last error: %s", err))
+		}
+	})
 }
 
 type PyPIGraph struct {
