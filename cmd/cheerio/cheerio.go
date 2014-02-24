@@ -3,11 +3,12 @@ package main
 import (
 	"flag"
 	"fmt"
-	"github.com/beyang/cheerio"
 	"log"
 	"os"
 	"strings"
 	"sync"
+
+	"github.com/beyang/cheerio"
 )
 
 const (
@@ -110,6 +111,7 @@ func mainReqs(args []string, flags *flag.FlagSet) {
 
 	var pypiG *cheerio.PyPIGraph
 	if *file == "" {
+		cheerio.Load()
 		pypiG = cheerio.DefaultPyPIGraph
 	} else {
 		var err error
