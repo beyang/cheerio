@@ -1,4 +1,4 @@
-package util
+package fetch
 
 import (
 	"archive/tar"

@@ -1,7 +1,16 @@
 package cheerio
 
-import "regexp"
+import (
+	"regexp"
+	"strings"
+)
 
+// Normalizes package names so they are comparable
+func NormalizedPkgName(pkg string) string {
+	return strings.ToLower(pkg)
+}
+
+// Convenience functions that get the last instance of a type of file
 var tarRegexp = regexp.MustCompile(`[/A-Za-z0-9\._\-]+\.(?:tar\.(?:gz|bz2)|tgz)`)
 var zipRegexp = regexp.MustCompile(`[/A-Za-z0-9\._\-]+\.zip`)
 var eggRegexp = regexp.MustCompile(`[/A-Za-z0-9\._\-]+\.egg`)

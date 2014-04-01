@@ -49,8 +49,3 @@ func ParseRequirement(reqStr string) (*Requirement, error) {
 		Version:    match[4],
 	}, nil
 }
-
-// Normalizes package names so they are comparable
-func NormalizedPkgName(pkg string) string {
-	return strings.ToLower(pkg)
-}

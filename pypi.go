@@ -8,7 +8,7 @@ import (
 	"regexp"
 	"strings"
 
-	"github.com/beyang/cheerio/util"
+	"github.com/beyang/cheerio/fetch"
 	"github.com/beyang/go-version"
 )
 
@@ -76,11 +76,11 @@ func (p *PackageIndex) FetchRawMetadata(pkg string, tarPattern, eggPattern, zipP
 
 	// Get the latest version
 	if path := lastTar(files); path != "" {
-		return util.RemoteDecompress(fmt.Sprintf("%s%s", p.URI, path), tarPattern, util.Tar)
+		return fetch.RemoteDecompress(fmt.Sprintf("%s%s", p.URI, path), tarPattern, fetch.Tar)
 	} else if path := lastEgg(files); path != "" {
-		return util.RemoteDecompress(fmt.Sprintf("%s%s", p.URI, path), eggPattern, util.Zip)
+		return fetch.RemoteDecompress(fmt.Sprintf("%s%s", p.URI, path), eggPattern, fetch.Zip)
 	} else if path := lastZip(files); path != "" {
-		return util.RemoteDecompress(fmt.Sprintf("%s%s", p.URI, path), zipPattern, util.Zip)
+		return fetch.RemoteDecompress(fmt.Sprintf("%s%s", p.URI, path), zipPattern, fetch.Zip)
 	} else {
 		return nil, fmt.Errorf("[tar/zip] no tar or zip found in %+v for pkg %s", files, pkg)
 	}
