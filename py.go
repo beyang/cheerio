@@ -12,6 +12,7 @@ type Requirement struct {
 	Version    string
 }
 
+// Parse requirements from a raw string in the requirements format expected by pip (e.g., in requirements.txt)
 func ParseRequirements(rawReqs string) ([]*Requirement, error) {
 	rawReqs = strings.TrimSpace(rawReqs)
 
@@ -33,6 +34,7 @@ func ParseRequirements(rawReqs string) ([]*Requirement, error) {
 	return reqs, nil
 }
 
+// Parse a single raw requirement, e.g., from "flask=1.0.1"
 func ParseRequirement(reqStr string) (*Requirement, error) {
 	reqStr = strings.TrimSpace(reqStr)
 	match := requirementRegexp.FindStringSubmatch(reqStr)
@@ -48,6 +50,7 @@ func ParseRequirement(reqStr string) (*Requirement, error) {
 	}, nil
 }
 
+// Normalizes package names so they are comparable
 func NormalizedPkgName(pkg string) string {
 	return strings.ToLower(pkg)
 }

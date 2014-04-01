@@ -7,6 +7,8 @@ import (
 
 var topLevelTxtPattern = regexp.MustCompile(`(?:[^/]+/)*(?:[^/]*\.egg\-info/top_level\.txt)`)
 
+// Returns the top-level modules for a given PyPI package. This information is typically stored in the PyPI metadata, which is fetched from the remote
+// PyPI server. In some cases where the information is unavailable in the metadata, it has been hard-coded below.
 func (p *PackageIndex) FetchSourceTopLevelModules(pkg string) ([]string, error) {
 	b, err := p.FetchRawMetadata(pkg, topLevelTxtPattern, topLevelTxtPattern, topLevelTxtPattern)
 	if err != nil {

@@ -14,6 +14,9 @@ var repoPatterns = []*regexp.Regexp{
 
 var pkgInfoPattern = regexp.MustCompile(`(?:[^/]+/)*PKG\-INFO`)
 
+// Returns the source repository URL for a given PyPI package. This information is not explicitly specified anywhere in PyPI metadata, so try to infer
+// it by doing the following: First, check if it is hardcoded below. If not, then fetch the metadata from the PyPI server and check if the website
+// (specified in the metdata) pattern matches a repository URL.
 func (p *PackageIndex) FetchSourceRepoURL(pkg string) (string, error) {
 	b, err := p.FetchRawMetadata(pkg, pkgInfoPattern, pkgInfoPattern, pkgInfoPattern)
 	if err != nil {

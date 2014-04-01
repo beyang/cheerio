@@ -28,11 +28,13 @@ func init() {
 	}
 }
 
+// Dependency graph over repositories in a given Python Package Index.
 type PyPIGraph struct {
 	Req   map[string][]string
 	ReqBy map[string][]string
 }
 
+// Deserializes a PyPIGraph stored in a file
 func NewPyPIGraph(file string) (*PyPIGraph, error) {
 	var graph *PyPIGraph
 

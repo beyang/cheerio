@@ -2,13 +2,14 @@ package cheerio
 
 import (
 	"fmt"
-	"github.com/beyang/cheerio/util"
-	"github.com/beyang/go-version"
 	"io/ioutil"
 	"net/http"
 	"path/filepath"
 	"regexp"
 	"strings"
+
+	"github.com/beyang/cheerio/util"
+	"github.com/beyang/go-version"
 )
 
 var DefaultPyPI = &PackageIndex{URI: "https://pypi.python.org"}
@@ -17,6 +18,7 @@ type PackageIndex struct {
 	URI string
 }
 
+// Get names of all packages served by a PyPI server.
 func (p *PackageIndex) AllPackages() ([]string, error) {
 	pkgs := make([]string, 0)
 
