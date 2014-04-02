@@ -1,18 +1,21 @@
 package main
 
 import (
+	"encoding/json"
 	"flag"
 	"fmt"
-	"github.com/beyang/cheerio"
 	"log"
 	"os"
 	"strings"
 	"sync"
+
+	"github.com/beyang/cheerio"
 )
 
 const (
 	Cmd_Repo     = "repo"
 	Cmd_Reqs     = "reqs"
+	Cmd_ReqsDir  = "reqsdir"
 	Cmd_ReqGen   = "reqs-generate"
 	Cmd_TopLevel = "toplevel"
 )
@@ -20,6 +23,7 @@ const (
 var Commands = map[string]func(args []string, flags *flag.FlagSet){
 	Cmd_Repo:     mainRepo,
 	Cmd_Reqs:     mainReqs,
+	Cmd_ReqsDir:  mainReqsDir,
 	Cmd_ReqGen:   mainReqGen,
 	Cmd_TopLevel: mainTopLevel,
 }
@@ -90,6 +94,32 @@ func mainTopLevel(args []string, flags *flag.FlagSet) {
 		fmt.Printf("Error: %s\n", err)
 	} else {
 		fmt.Println(strings.Join(modules, " "))
+	}
+}
+
+func mainReqsDir(args []string, flags *flag.FlagSet) {
+	flags.Usage = func() {
+		fmt.Fprintf(os.Stderr, "")
+		flags.PrintDefaults()
+	}
+	flags.Parse(args[1:])
+	if flags.NArg() < 1 {
+		flags.Usage()
+		os.Exit(1)
+	}
+
+	dir := flags.Arg(0)
+	reqs, err := cheerio.RequirementsForDir(dir)
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "Error getting requirements for PyPI package directory: %s", err)
+		os.Exit(1)
+	}
+
+	// Print requirements out
+	err = json.NewEncoder(os.Stdout).Encode(reqs)
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "Error encoding output")
+		os.Exit(1)
 	}
 }
 
